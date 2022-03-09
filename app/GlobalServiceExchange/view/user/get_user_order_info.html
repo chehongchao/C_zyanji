@@ -1,0 +1,225 @@
+{include file="public/head" /}
+
+<body style="background:#f5f5f5;">
+
+<!-- 开始_内容 -->
+<div class="layui-container">
+
+    {include file="public/menu" /}
+
+    <div class="layui-row">
+        <div class="layui-col-xs12 layui-col-sm10 layui-col-md6 layui-col-lg6 layui-col-sm-offset1 layui-col-md-offset3 layui-col-lg-offset3">
+
+            <div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+                <ul class="layui-tab-title">
+                    <li class="{$display_menu.menu_display_all|default=''}">
+                        <a href="{:url('/GlobalServiceExchange/user/getUserAllOrderInfo')}">
+                            全部
+                        </a>
+                    </li>
+                    <li class="{$display_menu.menu_display_complete|default=''}">
+                        <a href="{:url('/GlobalServiceExchange/user/getUserCompleteOrderInfo')}">
+                            已完成
+                        </a>
+                    </li>
+                    <li class="{$display_menu.menu_display_refund|default=''}">
+                        <a href="{:url('/GlobalServiceExchange/user/getUserRefundOrderInfo')}">
+                            退款订单
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="order_list">
+                <blockquote class="layui-elem-quote">共找到{$order_info_arr.total}条订单记录</blockquote>
+                <!--一级类目循环-->
+                {volist name="order_info_arr['data']" id="vo"}
+                <div class="layui-card" style="border-radius: 1rem;">
+                    <div class="layui-card-header" style="font-weight: bold;">序列号/IMEI：{$vo.sn}</div>
+                    <div class="layui-card-body">
+
+                        <span style="color: #1d1d1f;font-weight: 300;">状态</span><span style="color: #999999;font-weight: 300;float: right;">
+                            {switch $vo.status}
+                                {case 0}待系统自动确认收货{/case}
+                                {case 1}已完成{/case}
+                                {case 2}退款中{/case}
+                                {case 3}已退款(部分退){/case}
+                                {case 4}已退款(全额退){/case}
+                                {case 5}退款失败(不符合退款条件){/case}
+                                {default /}未获取到订单状态
+                            {/switch}
+                        </span>
+                            {switch $vo.status}
+                                {case 0}<p style="margin-top: 0.6rem;"></p><span style="color: #1d1d1f;font-weight: 300;">退款</span><span style="color: #1E9FFF;font-weight: 300;float: right;" onclick="refund('{$vo.out_trade_no}')">点我</span>{/case}
+                                {case 1}<p style="margin-top: 0.6rem;"></p><span style="color: #1d1d1f;font-weight: 300;">退款</span><span style="color: #1E9FFF;font-weight: 300;float: right;" onclick="exceed_refund_time_time_validity()">点我</span>{/case}
+                                {case 2}<p style="margin-top: 0.6rem;"></p><span style="color: #1d1d1f;font-weight: 300;">退款</span><span style="color: #999999;font-weight: 300;float: right;" onclick="do_not_repeat_submit()">点我</span>{/case}
+                                {case 3|4}<p style="margin-top: 0.6rem;"></p><span style="color: #1d1d1f;font-weight: 300;">退款</span><span style="color: #999999;font-weight: 300;float: right;" onclick="refund_complete()">点我</span>{/case}
+                                {case 5}<p style="margin-top: 0.6rem;"></p><span style="color: #1d1d1f;font-weight: 300;">退款</span><span style="color: #999999;font-weight: 300;float: right;" onclick="not_eligible_refund_condition()">点我</span>{/case}
+                                {default /}<p style="margin-top: 0.6rem;"></p><span style="color: #1d1d1f;font-weight: 300;">退款</span><span style="color: #1E9FFF;font-weight: 300;float: right;" onclick="refund('{$vo.out_trade_no}')">点我</span>
+                            {/switch}
+
+                        <p style="margin-top: 0.6rem;"></p>
+                        <span style="color: #1d1d1f;font-weight: 300;">售后</span><a href="{$customer_service_url}" target="_blank" rel="noopener noreferrer" style="color: #1E9FFF;font-weight: 300;float: right;">联系客服</a>
+                        <p style="margin-top: 0.6rem;"></p>
+                        <span style="color: #1d1d1f;font-weight: 300;">查询结果</span><a href="{$view_query_result_url}{$vo.out_trade_no}" target="_blank" rel="noopener noreferrer" style="color: #1E9FFF;font-weight: 300;float: right;">点我查看</a>
+                        <p style="margin-top: 0.6rem;"></p>
+                        <span style="color: #1d1d1f;font-weight: 300;">查询类型</span><span style="color: #999999;font-weight: 300;float: right;">
+                            {switch $vo.query_type}
+                                {case coverage_purchase}激活日期{/case}
+                                {case details_carrier}验机报告{/case}
+                                {case carrier}网络锁、运营商、购买地点{/case}
+                                {case icloud}激活锁、ID黑白{/case}
+                                {case purchase}生产日期、购买日期、激活...{/case}
+                                {default /}未获取到查询类型
+                            {/switch}
+                        </span>
+                        <p style="margin-top: 0.6rem;"></p>
+                        <span style="color: #1d1d1f;font-weight: 300;">支付时间</span><span style="color: #999999;font-weight: 300;float: right;">{$vo.pay_time|date='Y-m-d H:i:s'}</span>
+                        <p style="margin-top: 0.6rem;"></p>
+                        <span style="color: #1d1d1f;font-weight: 300;">支付金额</span><span style="color: #999999;font-weight: bold;float: right;">¥{$query_type_price[$vo.query_type]}</span>
+                    </div>
+                </div>
+                {/volist}
+                <div id="pages" style="text-align: center;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 结束_内容 -->
+
+
+{// 公共函数 }
+<script>
+    //显示自动关闭倒计秒数
+    function timing_close_prompt(prompt,time,is_reload_page){
+        layer.alert(prompt, {
+            time: time*1000
+            ,success: function(layero, index){
+                var timeNum = this.time/1000, setText = function(start){
+                    layer.title((start ? timeNum : --timeNum) + ' 秒后关闭', index);
+                };
+                setText(!0);
+                this.timer = setInterval(setText, 1000);
+                if(timeNum <= 0) clearInterval(this.timer);
+            }
+            ,end: function(){
+                clearInterval(this.timer);
+                if(is_reload_page===1){
+                    window.location.reload();
+                }
+            }
+        });
+    }
+</script>
+
+<script>
+    //显示自动关闭倒计秒数
+    function timing_close_prompt_refund(prompt,time,is_reload_page){
+        layer.alert(prompt, {
+            time: time*1000
+            ,success: function(layero, index){
+                var timeNum = this.time/1000, setText = function(start){
+                    layer.title((start ? timeNum : --timeNum) + ' 秒后关闭', index);
+                };
+                setText(!0);
+                this.timer = setInterval(setText, 1000);
+                if(timeNum <= 0) clearInterval(this.timer);
+            }
+            ,end: function(){
+                clearInterval(this.timer);
+                checkPayeeInfo();
+                if(is_reload_page===1){
+                    window.location.reload();
+                }
+            }
+        });
+    }
+</script>
+
+{// 分页 }
+<script>
+    layui.use('laypage', function(){
+        var laypage = layui.laypage;
+
+        laypage.render({
+            elem: 'pages'
+            , count: {$order_info_arr.total}
+            , theme: '#FFB800'
+            , limit: {$order_info_arr.per_page}
+            , curr: {$order_info_arr.current_page}
+            , jump:function (obj,first){
+                if(!first){
+                    location.href = "?page=" + obj.curr;
+                }
+            }
+        });
+    })
+</script>
+
+{// 没查到订单信息弹出提示框 }
+<script>
+    if({$order_info_arr.total} === 0){
+        document.getElementById("order_list").innerHTML = "";
+        timing_close_prompt("暂无查询记录，请查询后再来查看订单信息哦~",3);
+    }
+</script>
+
+{// 退款接口 }
+<script>
+    function refund(out_trade_no){
+        $.ajax({
+            url:'{:url("/GlobalServiceExchange/user/refund")}',
+            data:{"out_trade_no":out_trade_no},
+            type:"POST",
+            async:true,
+            success(result){
+                if(result.status === 1){
+                    //自定义标题风格
+                    timing_close_prompt_refund(result.message,3,0);
+                }else if(result.status===0){
+                    timing_close_prompt(result.message,3,0);
+                }else{
+                    timing_close_prompt("未知错误，请重试或联系人工客服处理哦~",3,0);
+                }
+            }
+        })
+    }
+
+    function checkPayeeInfo(){
+        $.ajax({
+            url:'{:url("/GlobalServiceExchange/user/checkPayeeInfo")}',
+            type:"POST",
+            async:true,
+            success(result){
+                if(result.status !== 1){
+                    layer.confirm(result.message, {
+                        btn: ['前往填写'] //按钮
+                    }, function(){
+                        window.location = '{:url("/GlobalServiceExchange/user/account")}';
+                    });
+                }else{
+
+                }
+            }
+        })
+    }
+
+    function exceed_refund_time_time_validity(){
+        timing_close_prompt("超过七天无理由退货的有效期，如需退款请联系人工客服处理哦~",3);
+    }
+
+    function do_not_repeat_submit(){
+        timing_close_prompt("您的退款申请正在处理中，请勿重复提交退款哦~",3);
+    }
+
+    function refund_complete(){
+        timing_close_prompt("您的退款已办理成功，请前往您填写的收款账户中查看，如有疑问可联系人工客服处理哦~",5);
+    }
+
+    function not_eligible_refund_condition(){
+        timing_close_prompt("此条订单不符合退款条件，如有疑问可联系人工客服处理哦~",3);
+    }
+</script>
+
+</body>
+</html>

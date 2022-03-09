@@ -1,0 +1,86 @@
+{include file="public/head" /}
+
+<body style="background:#f5f5f5;">
+    <div class="layui-container" style="background:#ffffff;margin-top: 1rem;">
+        {include file="public/menu" /}
+        <div class="layui-row">
+            <div class="layui-col-xs12 layui-col-sm10 layui-col-md6 layui-col-lg6 layui-col-sm-offset1 layui-col-md-offset3 layui-col-lg-offset3">
+                <p id="query_result_prompt" style="text-align: center;margin-top: 0.3rem;margin-bottom: 0.3rem;">正在努力查询中,已等待1秒~</p>
+                <table id="query_results_table" lay-filter="test"></table>
+            </div>
+        </div>
+    </div>
+
+<script>
+    var i = 0;
+
+    //查询GSX查询状态
+    function getGsxQueryStatus(){
+        var request_data = {'out_trade_no':'{$out_trade_no}'};
+        i = i + 1;
+        if( i === 10 ){
+            //需要优化
+            window.clearInterval(timer1);
+            layer.confirm("超时未获取到查询结果!", {
+                //#优化
+                btn: ['重试','联系客服'] //按钮
+            }, function(){
+                window.location.reload();
+            }, function(){
+                window.location = '{:url("/GlobalServiceExchange/help/customerService")}';
+            });
+        }
+
+        //显示已等待时间
+        if( i === 10 ){
+            document.getElementById("query_result_prompt").innerHTML = "";
+        }else{
+            document.getElementById("query_result_prompt").innerHTML = "正在努力查询中,已等待" + i + "秒~";
+        }
+
+        $.ajax({
+            url:'{:url("/GlobalServiceExchange/Query/getGsxQuerystatus")}',
+            data:request_data,
+            type:"POST",
+            success(res){
+                if(res.status===1){
+
+                    layui.use('table', function(){
+                        var table = layui.table;
+                        table.render({
+                            elem: '#query_results_table'
+                            ,url: '/GlobalServiceExchange/Query/getQueryResult?out_trade_no={$out_trade_no}' //优化：使用(:url())
+                            ,page: false //开启分页
+                            ,cols: [[ //表头
+                                {field: 'query_item', title: '查询项目', width:'40%',}
+                                ,{field: 'query_result', title: '查询结果', width:'60%'}
+                            ]]
+                        });
+                    });
+                    document.getElementById("query_result_prompt").innerHTML = '查询成功~<p style="margin-top: 0.3rem;margin-bottom: 0.3rem;font-size: 13px;">带<span style="color: #FF5722;font-weight: 600;">&nbsp;...&nbsp;</span>的文字需要点击它查看完整内容哦~</spna>';
+
+                    window.clearInterval(timer1);
+                    return true;
+                }else if(res.status===2){
+                    window.clearInterval(timer1);
+                    layer.confirm(res.message, {
+                        //#优化
+                        btn: ['重新创建订单','联系人工客服'] //按钮
+                    }, function(){
+                        window.location = '{:url("/GlobalServiceExchange/good/index")}';
+                    }, function(){
+                        window.location = '{:url("/GlobalServiceExchange/help/customerService")}';
+                    });
+                }else if(res.status===0){
+                    //订单待支付~(未扫码|扫码未付款|...) 继续请求；
+                }
+            }
+        })
+        return false;
+    }
+
+    //每5秒执行一次myFunction()方法
+    var timer1 = window.setInterval(getGsxQueryStatus, 1000);
+
+</script>
+{include file="public/foot" /}

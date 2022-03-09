@@ -1,0 +1,56 @@
+{include file="public/head" /}
+
+<body style="background:#f5f5f5;">
+
+<!-- 开始_内容 -->
+<div class="layui-container" style="background:#ffffff;">
+
+    {include file="public/menu" /}
+    <hr/>
+
+    <div class="layui-row">
+        <div class="layui-col-xs12 layui-col-sm10 layui-col-md6 layui-col-lg6 layui-col-sm-offset1 layui-col-md-offset3 layui-col-lg-offset3">
+            {$message|raw|default=""}
+        </div>
+    </div>
+</div>
+<!-- 结束_内容 -->
+
+<script>
+    //显示自动关闭倒计秒数
+    function timing_close_prompt(prompt,time,is_redirect,redirect_url){
+        layer.alert(prompt, {
+            time: time*1000
+            ,success: function(layero, index){
+                var timeNum = this.time/1000, setText = function(start){
+                    layer.title((start ? timeNum : --timeNum) + ' 秒后关闭', index);
+                };
+                setText(!0);
+                this.timer = setInterval(setText, 1000);
+                if(timeNum <= 0) clearInterval(this.timer);
+            }
+            ,end: function(){
+                clearInterval(this.timer);
+                if(is_redirect===true){
+                    window.location = redirect_url;
+                }
+            }
+        });
+    }
+
+    //登录成功提示
+    function login_success_prompt(){
+        var redirect_url;
+        if ({$login_status} === 1) {
+            redirect_url = '{:url("/GlobalServiceExchange/good/index")}';
+            timing_close_prompt("登录成功,正在为您跳转中~（点击确定按钮立即跳转）", 3, true, redirect_url);
+        } else if({$login_status} === 0){
+
+        } else {
+            timing_close_prompt("自动登录过程出现未知错误，请重试或联系人工客服处理~", 5,false,"");
+        }
+    }
+    login_success_prompt()
+</script>
+
+{include file="public/foot" /}

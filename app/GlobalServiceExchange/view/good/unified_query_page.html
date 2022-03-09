@@ -1,0 +1,144 @@
+{include file="public/head" /}
+
+<body style="background:#f5f5f5;">
+
+<!-- 开始_内容 -->
+<div class="layui-container" style="background:#ffffff;">
+
+    {include file="public/menu" /}
+
+    <div class="layui-row">
+        <div class="layui-col-xs12 layui-col-sm10 layui-col-md6 layui-col-lg6 layui-col-sm-offset1 layui-col-md-offset3 layui-col-lg-offset3">
+
+
+            <form class="layui-form layui-form-pane" action="" style="margin: 1rem;">
+                <div class="layui-form-item">
+                    <p style="text-align: center;">
+                        {$title}
+                    <span onclick="get_query_result_exampl_img_url()" style="color: #01AAED;font-size: 13px;">(结果示例)</span>
+                    </p>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label" onclick="get_sn_tutorial()" style="color: #1E9FFF;">获取</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" name="__token__" value="{:token()}" />
+                        <input type="text" name="sn" required  lay-verify="required" placeholder="输入设备的序列号或IMEI" autocomplete="on" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button class="layui-btn" lay-submit="" lay-filter="query">开始查询</button>
+                        <button type="reset" class="layui-btn layui-btn-primary">清空</button>
+                    </div>
+                </div>
+            </form>
+
+
+        </div>
+    </div>
+</div>
+<!-- 结束_内容 -->
+
+<script>
+    function get_sn_tutorial(){
+        window.location = 'https://support.qq.com/products/297930/faqs/84128';
+    }
+</script>
+
+<script>
+    function get_query_result_exampl_img_url(){
+        //相册层
+        $.getJSON('{:url("/GlobalServiceExchange/good/getQueryResultExampleImgUrl")}'+"?query_type={$query_type}", function(json){
+            layer.photos({
+                resize:true
+                ,scroll: true
+                ,closeBtn: 2
+                ,shade: [0.88, '#000000']
+                ,photos: json //格式见API文档手册页
+                ,anim: 5, //0-6的选择，指定弹出图片动画类型，默认随机
+            });
+        });
+    }
+</script>
+
+<script>
+    var outTradeNo = "";
+
+    //生成订单号
+    function getOutTradeNo(){
+        $.ajax({
+            url:'{:url("/GlobalServiceExchange/order/generateOutTradeNo")}',
+            data:"",
+            type:"POST",
+            async: false,
+            success(result){
+                if(result.status === 1){
+                    outTradeNo = result.data.out_trade_no;
+                }else{
+                    outTradeNo = false;
+                }
+            }
+        })
+        return outTradeNo;
+    }
+
+    //记录方法名、订单号
+    function recordOutTradeNo(outTradeNo) {
+        $.ajax({
+            url: '/GlobalServiceExchange/good/{$function_name}',
+            data: {"out_trade_no":outTradeNo},
+            type: "POST",
+            async: false,
+            success(result) {
+                if (result.status === 1) {
+                    outTradeNo = result.data.out_trade_no;
+                } else {
+                    outTradeNo = false;
+                }
+            }
+        })
+        return outTradeNo;
+    }
+
+    outTradeNo = getOutTradeNo();
+    recordOutTradeNo(outTradeNo);
+
+    layui.use(['form'], function () {
+        var form = layui.form,
+            layer = layui.layer;
+        // 优化：防止别人把自己网站嵌入他的网站。|登录过期的时候，跳出ifram框架
+        if (top.location !== self.location) top.location = self.location;
+        // 进行登录操作
+        form.on('submit(query)', function (data) {
+            data = data.field;
+            data["out_trade_no"] = outTradeNo;
+            url = "/GlobalServiceExchange/pay/getPaymentCode";
+            $.ajax({
+                url,
+                data,
+                type:"POST",
+                async: false,
+                success(res){
+                    if( res.status === 1 ){
+                        layer.msg(res.message, function () {
+                            window.location = '/GlobalServiceExchange/pay/index.html?out_trade_no=' + outTradeNo;
+                        });
+                    }else if(res.status===0){
+                        //询问框
+                        layer.confirm(res.message, {
+                            btn: ['好'] //按钮
+                        });
+                    }
+                    else if(res.status===301){
+                        window.location = '/GlobalServiceExchange/user/login.html';
+                    }
+                }
+            })
+            return false;
+        });
+    });
+</script>
+
+
+{include file="public/foot" /}

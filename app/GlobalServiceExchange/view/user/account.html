@@ -1,0 +1,88 @@
+{include file="public/head" /}
+
+<body style="background:#f5f5f5;">
+
+<!-- 开始_内容 -->
+<div class="layui-container" style="background:#ffffff;">
+
+    {include file="public/menu" /}
+    <hr/>
+
+    <div class="layui-row">
+        <div class="layui-col-xs12 layui-col-sm10 layui-col-md6 layui-col-lg6 layui-col-sm-offset1 layui-col-md-offset3 layui-col-lg-offset3">
+            <form class="layui-form layui-form-pane" action="">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">用户ID</label>
+                    <div class="layui-input-block">
+                        <input type="text" placeholder="{$temp_open_id}" autocomplete="off" class="layui-input" disabled>
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">姓名</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="payee_name" value="{$user_info.payee_name|default=''}" required  lay-verify="required" placeholder="{$user_info.payee_name|default='请输入您的支付宝账号'}" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <label class="layui-form-label">收款人账号</label>
+                    <div class="layui-input-block">
+                        <input type="text" name="payee_account" value="{$user_info.payee_account|default=''}" required  lay-verify="required" placeholder="{$user_info.payee_account|default='支付宝账号或银行卡号'}" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button class="layui-btn" lay-submit lay-filter="update_user_info">立即提交</button>
+                        <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                    </div>
+                </div>
+            </form>
+
+            <script>
+                //Demo
+                layui.use('form', function(){
+                    var form = layui.form;
+
+                    //监听提交
+                    form.on('submit(formDemo)', function(data){
+                        layer.msg(JSON.stringify(data.field));
+                        return false;
+                    });
+                });
+            </script>
+        </div>
+    </div>
+</div>
+<!-- 结束_内容 -->
+
+<script>
+
+    layui.use(['form'], function () {
+        var form = layui.form,
+            layer = layui.layer;
+        // 优化：防止别人把自己网站嵌入他的网站。|登录过期的时候，跳出ifram框架
+        if (top.location !== self.location) top.location = self.location;
+        // 进行登录操作
+        form.on('submit(update_user_info)', function (data) {
+            data = data.field;
+            url = "/GlobalServiceExchange/user/updateUserInfo";
+            $.ajax({
+                url,
+                data,
+                type:"POST",
+                async: false,
+                success(res){
+                    layer.msg(res.message, function () {
+                        window.location.reload();
+                    });
+                }
+            })
+            return false;
+        });
+    });
+
+</script>
+
+{include file="public/foot" /}
