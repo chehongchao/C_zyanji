@@ -30,6 +30,8 @@
 * 第七步：配置微信内登录网站(教程还没写)
 
 ## 系统介绍
+>演示地址：[点我查看])(https://gsx-demo.jdwkj233.cn/GlobalServiceExchange/user/login.html?open_id=o-Z_P0XclHJemevBK8U4aMyuhnuU)
+
 1.1 个人中心模块
 * 可设置用户退款时的收款人信息和收款人账号；
 
